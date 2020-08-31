@@ -27,3 +27,4 @@ Use it at your own risk. Developers, authors  and mantainers cannot be held resp
 
 ## Contributors and Credits
 - Massimo S. Musumeci massmux https://github.com/massmux/bip39gen
+- MaxP

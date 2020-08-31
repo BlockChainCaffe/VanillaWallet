@@ -22,6 +22,7 @@
 
     Credits:
         - Massimo S. Musumeci massmux https://github.com/massmux/bip39gen
+        - MaxP
 
     Licence:
         GNU General Public Licence V3
@@ -100,7 +101,7 @@ def generatePrivateKey():
 
 def generateBIP39Words():
     global BIP39Words
-    mnemo = Mnemonic('english')
+    mnemo = Mnemonic(Args.language)
     byte_array = bytearray.fromhex(PrivateKey)
     BIP39Words = mnemo.to_mnemonic(byte_array)
 
@@ -108,7 +109,7 @@ def restoreWallet():
     global BIP39Words
     global Args
     global PrivateKey
-    mnemo = Mnemonic('english')
+    mnemo = Mnemonic(Args.language)
     BIP39Words = Args.restore
     ent = mnemo.to_entropy(BIP39Words)
     PrivateKey = hexlify(ent).decode("utf-8")
@@ -128,7 +129,7 @@ def main():
     ## DISPLAY RESULTS
     print(bg(255, 255, 255)+ef.bold+"    Seed     "+rs.bg+rs.bold_dim)
     print("\tPrivate key: ", key.to_hex())
-    print("\tRecovery Seed:\t", BIP39Words)
+    print("\tBIP39 Seed:  ", BIP39Words)
     # for idx, word in enumerate(BIP39Words.split(" ")):
     #     if ((idx+1) % 6 == 1):
     #         print("\n\t\t\t", end="")
@@ -156,6 +157,7 @@ def parseArguments():
     """ parsing arguments """
     parser = argparse.ArgumentParser("Vanilla Wallet command line arguments")
     parser.add_argument("-e", "--entropy", help="An optional random string in case you prefer providing your own entropy", type=str, required=False)
+    parser.add_argument("-l", "--language", help="Optional, the language for the mnemonic words list (BIP39). Default: english", type=str, required=False, default="english", choices=["english", "chinese_simplified", "chinese_traditional", "french", "italian", "japanese", "korean", "spanish"])
     parser.add_argument("-t", "--testnet", help="Generate addresses for test net (default is main net)", dest='testnet', action='store_const', const=True, default=False)
     parser.add_argument("-r", "--restore", help="Restore a wallet from BIP39 word list", dest="restore", type=str, required=False)
     Args = parser.parse_args()
