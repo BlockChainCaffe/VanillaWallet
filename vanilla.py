@@ -26,6 +26,10 @@
 
     Licence:
         GNU General Public Licence V3
+
+    Tested against:
+        https://privatekeys.pw
+
 """
 
 
@@ -36,12 +40,15 @@ from sty import fg, bg, ef, rs
 import subprocess
 
 import bit
+from bit import utils
+from mnemonic import Mnemonic
+from web3 import Web3
 import bech32
+import base58
+
 import binascii
 from binascii import hexlify, unhexlify
 import hashlib
-from bit import utils
-from mnemonic import Mnemonic
 
 
 ### Globlals & Constants 
@@ -114,21 +121,64 @@ def restoreWallet():
     ent = mnemo.to_entropy(BIP39Words)
     PrivateKey = hexlify(ent).decode("utf-8")
 
-def main():    
-    # Generate Actual keys
-    # Test Net or Main Net?
-    key = bit.PrivateKeyTestnet.from_hex(PrivateKey) if Args.testnet else bit.Key.from_hex(PrivateKey)
-
-
-    # KeyHash
-    hashkey = hashlib.sha256(key.public_key).digest()
+def hash160(pubKey):
+    """
+        Given a public key (can be hex string or bytes) returns the RIPMED(SHA256(pub))
+        Returns the hash160 in bytes (or False on error)
+    """
+    # trasnform all in bytes
+    if (type(pubKey) == str):
+        pubKey = bytes.fromhex(pubKey)
+    if (type(pubKey) != bytes):
+        print(type(pubKey))
+        return False
+    # compute RIPMED(SHA256(pub))
+    hashkey = hashlib.sha256(pubKey).digest()
     ripemd160 = hashlib.new("ripemd160")
     ripemd160.update(hashkey)
-    keyhash = ripemd160.digest()
+    h160 = ripemd160.digest()
+    return h160
+
+def pub2bitaddr(version, pubKey):
+    """ 
+        Creates the address from the public key
+        "Bitcoin Stye" : 
+            do ripmed(sha)
+            add version byte
+            add 4 bytes of check
+            return in base58
+    """
+    h160 = hash160(pubKey)
+    if not h160:
+        return False
+    # Add version to the public key (hex)
+    ver = version + h160.hex()
+    # compute the double sha256 control
+    check = hashlib.sha256(hashlib.sha256(bytes.fromhex(ver)).digest()).hexdigest()
+    # compose : version + publickey + first 8 bytes of check 
+    vercheck = ver + check[:8]
+    # encode in base58
+    addr = base58.b58encode(bytes.fromhex(vercheck))
+    return addr.decode("utf-8")
+
+
+def main():    
+
+    # Create ECDSA private key
+    key = bit.PrivateKeyTestnet.from_hex(PrivateKey) if Args.testnet else bit.Key.from_hex(PrivateKey)
+
+    # get hash160 of public key
+    h160 = hash160(key.public_key)
 
     ## DISPLAY RESULTS
     print(bg(255, 255, 255)+ef.bold+"    Seed     "+rs.bg+rs.bold_dim)
     print("\tPrivate key: ", key.to_hex())
+    ## Public key
+    # the first byte is to identify if it's in compressed or uncompressed format
+    # compressed format uses only X coordinates of public point
+    print("\tPublic key   ", key._pk.public_key.format(compressed=False).hex(), " (uncompressed)")
+    # uncompressed format uses both X and Y coordinates of public point
+    print("\tPublic key:  ", key.public_key.hex(), "(Secp256k1 compressed)")
     print("\tBIP39 Seed:  ", BIP39Words)
     # for idx, word in enumerate(BIP39Words.split(" ")):
     #     if ((idx+1) % 6 == 1):
@@ -139,18 +189,56 @@ def main():
     # Bitcoin
     print()
     print(bg(255, 150, 50)+ef.bold+"   Bitcoin   "+rs.bg+rs.bold_dim)
-    print("\tPublic key:  ", utils.bytes_to_hex(key.public_key, True), "(Secp256k1)")
-    print("\tKeyHash:     ", keyhash.hex(), "(ripmed160(sha256(pub)))")
+    print("\tHash160:     ", h160.hex(), "(ripmed160(sha256(pub)))")
     print("\tWIF:         ", key.to_wif())
     print("\tAddress:     ", key.address, " (P2PKH)")
     print("\tSegWit Addr: ", key.segwit_address)
-    bech = bech32.encode('tb', 0, keyhash) if Args.testnet else bech32.encode('bc', 0, keyhash) 
+    bech = bech32.encode('tb', 0, h160) if Args.testnet else bech32.encode('bc', 0, h160) 
     print("\tBech32 Addr: ", bech)
 
     # Ethereum
     print()
     print(bg(150, 150, 150)+ef.bold+"   Ethereum  "+rs.bg+rs.bold_dim)
+    # get the uncompressed public key (remove first byte and concat X and Y) 
+    pu = key._pk.public_key.format(compressed=False).hex()[2:]
+    # hash uncompressed public key with keccak algorithm
+    k = Web3.keccak(hexstr=pu)
+    # add "0x" at the beginning to show it's hex, the get the last 20 bytes of it
+    addr = "0x"+k.hex()[-40:]
+    # Turn in into CheCKSuM addresse format (case sensitive)
+    addr = Web3.toChecksumAddress(addr)
+    print("\tAddress:     ", addr)
     
+    # Dash
+    print()
+    print(bg(50, 50, 255)+ef.bold+"     Dash    "+rs.bg+rs.bold_dim )
+    # Address generation is same as Bitcoin, it only changes the version byte
+    if Args.testnet:
+        addr = pub2bitaddr("8c", key.public_key)
+        print("\tAddress:     ", addr, " (P2PKH)")
+        addr = pub2bitaddr("13", key.public_key)
+        print("\tAddress:     ", addr, " (P2SH)")
+    else: 
+        addr = pub2bitaddr("4c", key.public_key)
+        print("\tAddress:     ", addr, " (P2PKH)")
+        addr = pub2bitaddr("10", key.public_key)
+        print("\tAddress:     ", addr, " (P2SH)")
+
+
+    # LiteCoin
+    print()
+    print(bg(100, 100, 100)+ef.bold+"   Litecoin  "+rs.bg+rs.bold_dim )
+    # Address generation is same as Bitcoin, it only changes the version byte
+    if Args.testnet:
+        addr = pub2bitaddr("6f", key.public_key)
+        print("\tAddress:     ", addr, " (P2PKH)")
+    else: 
+        addr = pub2bitaddr("30", key.public_key)
+        print("\tAddress:     ", addr, " (P2PKH)")
+    if not Args.testnet:
+        bech = bech32.encode('ltc', 0, h160) 
+        print("\tBech32 Addr: ", bech)
+
 
 def parseArguments():
     global Args
