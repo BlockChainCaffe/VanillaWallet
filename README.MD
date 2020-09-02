@@ -7,8 +7,9 @@ The results can be used to generate paper wallets or other cold storage
 ## Supported coins
 
  - Bitcoin (legacy, segwith, bech32)
+ - Dash
+ - Litecoin 
  - Ethereum (Ethereum, EthereumClassic, Quadrans...)
- - Dash (coming soon)
  - Monero (coming soon)
 
 ## Key Geneation
