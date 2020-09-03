@@ -20,7 +20,22 @@ Ensure you have python3 installed, then install the dependecies with:
 `pip3 install -r requirements.txt`
 
 ## Usage
-`python3 vanilla.py -h`
+`> python3 vanilla.py -h
+usage: Vanilla Wallet command line arguments [-h] [-e ENTROPY]
+                                             [-l {english,chinese_simplified,chinese_traditional,french,italian,japanese,korean,spanish}]
+                                             [-t] [-r RESTORE]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -e ENTROPY, --entropy ENTROPY
+                        An optional random string in case you prefer providing
+                        your own entropy
+  -l {english,chinese_simplified,chinese_traditional,french,italian,japanese,korean,spanish}, --language {english,chinese_simplified,chinese_traditional,french,italian,japanese,korean,spanish}
+                        Optional, the language for the mnemonic words list
+                        (BIP39). Default: english
+  -t, --testnet         Generate addresses for test net (default is main net)
+  -r RESTORE, --restore RESTORE
+                        Restore a wallet from BIP39 word list`
 
  ## Disclaimer
 *This code is provided  ​“AS IS” with all faults, defects, bugs, and errors. Developers, authors  and mantainers of the code makes no warranties, express or implied, and hereby disclaims all implied warranties, including any warranty of merchantability and warranty of fitness for a particular purpose. 
