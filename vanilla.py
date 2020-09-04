@@ -41,12 +41,14 @@
 import sys
 import argparse
 import subprocess
+import json
 from sty import fg, bg, ef, rs
 
 import bit
 from bit import utils
 from mnemonic import Mnemonic
 from web3 import Web3
+import eth_keyfile
 import bech32
 import base58
 
@@ -176,10 +178,14 @@ def deriveWIF(prefix, compressed):
 ## RESULT PRINTING FUNCTIONS
 ##
 
+def banner(color, name):
+    print()
+    bgc = bg(color) if isinstance(color,str) else bg(*color)
+    print(bgc + ef.bold + "{:^20}".format(name) + rs.bg + rs.bold_dim)
+
 
 def printBitcoinWallet():
-    print()
-    print(bg(255, 150, 50)+ef.bold+"   Bitcoin   "+rs.bg+rs.bold_dim)
+    banner((255, 150, 50), "Bitcoin")
     """
         Print Bitcoin Wallet data:
             Hash160:
@@ -202,13 +208,7 @@ def printBitcoinWallet():
     print("\tBech32 Addr: ", bech)
 
 
-def printEthereumWallet():
-    print()
-    print(bg(150, 150, 150)+ef.bold+"   Ethereum  "+rs.bg+rs.bold_dim)
-    """
-        Print Ethereum Wallet data:
-            Address:
-    """
+def deriveEVMaddress():
     # get the uncompressed public key (remove first byte and concat X and Y) 
     pu = dataDict["publicKey_uncompressed"].hex()[2:]
     # hash uncompressed public key with keccak algorithm
@@ -216,13 +216,46 @@ def printEthereumWallet():
     # add "0x" at the beginning to show it's hex, the get the last 20 bytes of it
     addr = "0x"+k.hex()[-40:]
     # Turn in into CheCKSuM addresse format (case sensitive)
-    addr = Web3.toChecksumAddress(addr)
-    print("\tAddress:     ", addr)
-    
+    return Web3.toChecksumAddress(addr)
+
+def deriveUTCJSON():
+    if Args.password == None:
+        return "Cannot generate JSON-UTC file, no password provided. Use '-p' or '--password'"
+    juct = eth_keyfile.create_keyfile_json(bytes.fromhex(dataDict["privateKey"]), Args.password.encode("utf-8"))
+    return json.dumps(juct,indent=4)
+
+def printEthereumWallet():
+    banner((150, 150, 150),"Ethereum")
+    """
+        Print Ethereum Wallet data:
+            Address:
+    """
+    print("\tAddress:     ", deriveEVMaddress())
+    print("\tUTC-JSON:\n", deriveUTCJSON())
+
+
+def printEthereumClassicWallet():
+    banner((0, 150, 0),"EthereumClassic")
+    """
+        Print Ethereum Wallet data:
+            Address:
+    """
+    print("\tAddress:     ", deriveEVMaddress())
+    print("\tUTC-JSON:    ", deriveUTCJSON())
+
+
+def printQuadransWallet():
+    banner((150, 0, 150),"Quadrans")
+    """
+        Print Ethereum Wallet data:
+            Address:
+    """
+    print("\tAddress:     ", deriveEVMaddress())
+    print("\tUTC-JSON:    ", deriveUTCJSON())
+
 
 def printDashWallet():
-    print()
-    print(bg(50, 50, 255)+ef.bold+"     Dash    "+rs.bg+rs.bold_dim )
+    banner((50, 50, 255),"Dash")
     """
         Print Dash Wallet data:
 	        Address: (P2PKH)
@@ -240,8 +273,7 @@ def printDashWallet():
 
 
 def printLiteCoinWallet():
-    print()
-    print(bg(100, 100, 100)+ef.bold+"   Litecoin  "+rs.bg+rs.bold_dim )
+    banner((100, 100, 100),"Litecoin")
     """
         Print Litecoin Wallet data:
 	        Address: (P2PKH)
@@ -266,9 +298,10 @@ def printLiteCoinWallet():
 
 def main():    
     global dataDict
+    global Args
 
     ## DISPLAY RESULTS
-    print(bg(255, 255, 255)+ef.bold+"    Seed     "+rs.bg+rs.bold_dim)
+    banner("white","Seed")
     print("\tPrivate key: ", dataDict["privateKey"])
     ## Public key
     # the first byte is to identify if it's in compressed or uncompressed format
@@ -286,16 +319,22 @@ def main():
     else: 
         print("\tBIP39 Seed:  ", dataDict["BIP39Words"])
 
-    if Args.blockchain in ["All","Bitcoin"]:
+    if Args.blockchain in ["all","Bitcoin", "btc", "xbt"]:
         printBitcoinWallet()
 
-    if Args.blockchain in ["All","Ethereum"]:
+    if Args.blockchain in ["all","Ethereum", "eth"]:
         printEthereumWallet()
 
-    if Args.blockchain in ["All","Dash"]:
+    if Args.blockchain in ["all","EthereumClassic", "etc"]:
+        printEthereumClassicWallet()
+
+    if Args.blockchain in ["all","Quadrans", "qdc"]:
+        printQuadransWallet()
+
+    if Args.blockchain in ["all","Dash", "dash"]:
         printDashWallet()
 
-    if Args.blockchain in ["All","Litecoin"]:
+    if Args.blockchain in ["all","Litecoin", "ltc"]:
         printLiteCoinWallet()
 
 
@@ -304,12 +343,27 @@ def parseArguments():
     global Args
     """ parsing arguments """
     parser = argparse.ArgumentParser("Vanilla Wallet command line arguments")
-    parser.add_argument("-bc", "--blockchain", help="Optional, the blockchain the wallet is generater for. Default: all", type=str, required=False, default="All",choices=["All","Bitcoin", "Litecoin", "Ethereum", "Dash"])
+    parser.add_argument("-bc", "--blockchain", help="Optional, the blockchain the wallet is generater for. Default: all", 
+        type=str, required=False, default="all",
+        choices=[
+            "all",
+            "Bitcoin", "btc", "xbt", 
+            "Litecoin", "ltc",
+            "Ethereum", "eth",
+            "EthereumClassic", "etc",
+            "Quadrans", "qdc",
+            "Dash", "dash"
+            ])
+
+
     parser.add_argument("-wn", "--wordnumber", help="Optional, print BIP39 word list in numbered table", dest='wordlist', action='store_const', const=True, default=False)
     parser.add_argument("-e", "--entropy", help="An optional random string in case you prefer providing your own entropy", type=str, required=False)
     parser.add_argument("-l", "--language", help="Optional, the language for the mnemonic words list (BIP39). Default: english", type=str, required=False, default="english", choices=["english", "chinese_simplified", "chinese_traditional", "french", "italian", "japanese", "korean", "spanish"])
     parser.add_argument("-t", "--testnet", help="Generate addresses for test net (default is main net)", dest='testnet', action='store_const', const=True, default=False)
     parser.add_argument("-r", "--restore", help="Restore a wallet from BIP39 word list", dest="restore", type=str, required=False)
+    parser.add_argument("-p", "--password", help="Password for wallet encryption", dest="password", type=str, required=False)
+    parser.add_argument("-j", "--json", help="Produce only json output", dest='json', action='store_const', const=True, default=False)
+
     Args = parser.parse_args()
 
 
