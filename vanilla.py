@@ -33,6 +33,8 @@
     Tested against:
         https://privatekeys.pw
         https://learnmeabitcoin.com/technical/wif
+        https://github.com/bitcoin/bips/blob/master/bip-0038.mediawiki
+        https://www.bitaddress.org/
 
 """
 
@@ -42,7 +44,9 @@ import sys
 import argparse
 import subprocess
 import json
+import re
 from sty import fg, bg, ef, rs
+import sounddevice as sd
 
 import bit
 from bit import utils
@@ -51,6 +55,10 @@ from web3 import Web3
 import eth_keyfile
 import bech32
 import base58
+# import scrypt
+# from Crypto.Cipher import AES
+from graphenebase import PrivateKey
+from graphenebase.bip38 import encrypt
 
 import binascii
 from binascii import hexlify, unhexlify
@@ -62,9 +70,20 @@ import hashlib
 MIC_RND_SEC = 30        # seconds of mic sampling for private key generation
 SHA_RND_RND = 2048      # number of sha256 rounds for private key generation
 MIC_SLT_SEC = 5         # seconds of mic sampling for salt
+SAMPLE_RATE = 44100     # rate of sampling for audio recording 
 
 Args = {}               # Parameters received from command line argiments
 dataDict={}             # Dictionaries of values to share between BC address creation functions (RORO approach)
+
+
+####################################################################################################
+##
+## HELPER FUNCTIONS
+##
+
+def getNoise(sec):
+    sound = sd.rec(int(SAMPLE_RATE * sec), samplerate=SAMPLE_RATE, channels=2, blocking=True)
+    return hashlib.sha256(bytearray(b''.join(sound))).hexdigest()
 
 
 ####################################################################################################
@@ -82,22 +101,18 @@ def generatePrivateKey():
         salt0=""
     else:
         # create random by reading the mic for rnd_len seconds
-        print("Getting entropy from %s secs mic audiorecording... Please wait" % str(MIC_RND_SEC) )
-        mycmd=subprocess.getoutput('arecord -d %s -f dat -t wav -q | sha256sum -b' %  str(MIC_RND_SEC) )
-        hash0=mycmd[:64]
-        # print("256bits hashed entropy: %s" % hash0)
+        print("Getting entropy from %s secs mic audio recording... Please wait (and make some noise)" % str(MIC_RND_SEC) )
+        hash0=getNoise(MIC_RND_SEC)
+
         # create random for salt
-        print("Getting entropy from mic for creating a salt... Please wait" )
-        mysalt=subprocess.getoutput('arecord -d %s -f dat -t wav -q | sha256sum -b' %  str(MIC_SLT_SEC) )
-        salt0=mysalt[:64]
-        # print("256bits hashed salt: %s" % salt0)
+        print("Getting salt from %s secs mic audio recording... Please wait (and make some noise)" % str(MIC_SLT_SEC))
+        salt0=getNoise(MIC_SLT_SEC)
 
     """ sha256 rounds """
     print ("Iterating %s rounds of salted sha256 hashing... Please wait" % SHA_RND_RND )
     for i in range(0,SHA_RND_RND):
         hash0=hashlib.sha256((hash0+salt0).encode('utf-8')).hexdigest()
-        #debug purpose 
-        # print("%s %s Round %s val %s" % (hash0,salt0,i , hash0))
+
 
     # Store raw private key
     dataDict["privateKey"] = hash0
@@ -163,7 +178,11 @@ def pub2bitaddr(version, pubKey):
 
 
 def deriveWIF(prefix, compressed):
-    # WIF Generation
+    """ 
+        WIF Generation
+        Create WIF (Wallet Improt Format) for 
+        Bitcoin-like wallets
+    """
     exk = prefix + dataDict["privateKey"]
     if compressed :
         exk = exk + "01"
@@ -172,6 +191,13 @@ def deriveWIF(prefix, compressed):
     wif = base58.b58encode(bytes.fromhex(csk)).decode("utf-8")
     return wif
 
+def deriveBIP38():
+    if Args.password == None:
+        return "Cannot generate BIP38 encrypted key, no password provided. Use '-p' or '--password'"
+    privkey = dataDict["privateKey"]
+    passphrase = Args.password
+    return format(encrypt(PrivateKey(privkey),passphrase), "encwif")
+
 
 ####################################################################################################
 ##
@@ -179,6 +205,9 @@ def deriveWIF(prefix, compressed):
 ##
 
 def banner(color, name):
+    """
+        Print a banner with a color and name of the coin
+    """
     print()
     bgc = bg(color) if isinstance(color,str) else bg(*color)
     print(bgc + ef.bold + "{:^20}".format(name) + rs.bg + rs.bold_dim)
@@ -188,11 +217,7 @@ def printBitcoinWallet():
     banner((255, 150, 50), "Bitcoin")
     """
         Print Bitcoin Wallet data:
-            Hash160:
-            WIF:
-            Address:
-            SegWit Addr:
-            Bech32 Addr:
+            Hash160, WIF, BIP38, Address, SegWit Addr, Bech32 Addr
     """
     # Bitcoin
     key = dataDict["bitcoinKey"]
@@ -201,7 +226,8 @@ def printBitcoinWallet():
     # print("\tWIF:         ", key.to_wif())
     prefix = "EF" if Args.testnet else "80"
     print("\tWIF:         ", deriveWIF(prefix, True))
-
+    if Args.password != None:
+        print("\tBIP38:       ", deriveBIP38(), "(encrypted private key)")
     print("\tAddress:     ", key.address, " (P2PKH)")
     print("\tSegWit Addr: ", key.segwit_address)
     bech = bech32.encode('tb', 0, dataDict["hash160"]) if Args.testnet else bech32.encode('bc', 0, dataDict["hash160"]) 
@@ -222,7 +248,8 @@ def deriveUTCJSON():
     if Args.password == None:
         return "Cannot generate JSON-UTC file, no password provided. Use '-p' or '--password'"
     juct = eth_keyfile.create_keyfile_json(bytes.fromhex(dataDict["privateKey"]), Args.password.encode("utf-8"))
-    return json.dumps(juct,indent=4)
+    return  re.sub(r'^|\n'  ,'\n\t\t'  , json.dumps(juct,indent=4))
+
 
 def printEthereumWallet():
     banner((150, 150, 150),"Ethereum")
@@ -231,7 +258,8 @@ def printEthereumWallet():
             Address:
     """
     print("\tAddress:     ", deriveEVMaddress())
-    print("\tUTC-JSON:\n", deriveUTCJSON())
+    if Args.password != None:
+        print("\tUTC-JSON:    ", deriveUTCJSON())
 
 
 def printEthereumClassicWallet():
@@ -241,7 +269,8 @@ def printEthereumClassicWallet():
             Address:
     """
     print("\tAddress:     ", deriveEVMaddress())
-    print("\tUTC-JSON:    ", deriveUTCJSON())
+    if Args.password != None:
+        print("\tUTC-JSON:    ", deriveUTCJSON())
 
 
 def printQuadransWallet():
@@ -251,7 +280,8 @@ def printQuadransWallet():
             Address:
     """
     print("\tAddress:     ", deriveEVMaddress())
-    print("\tUTC-JSON:    ", deriveUTCJSON())
+    if Args.password != None:
+        print("\tUTC-JSON:    ", deriveUTCJSON())
 
 
 def printDashWallet():
@@ -362,7 +392,11 @@ def parseArguments():
     parser.add_argument("-t", "--testnet", help="Generate addresses for test net (default is main net)", dest='testnet', action='store_const', const=True, default=False)
     parser.add_argument("-r", "--restore", help="Restore a wallet from BIP39 word list", dest="restore", type=str, required=False)
     parser.add_argument("-p", "--password", help="Password for wallet encryption", dest="password", type=str, required=False)
+
+    ## Yet to be implemented
     parser.add_argument("-j", "--json", help="Produce only json output", dest='json', action='store_const', const=True, default=False)
+    parser.add_argument("-d", "--directory", help="An optional where to save produced files (json and qr codes)", type=str, required=False, default=".")
+    parser.add_argument("-q", "--qrcode", help="Generate qrcodes for addresses and keys", dest='qrcode', action='store_const', const=True, default=False)
 
     Args = parser.parse_args()
 
@@ -381,11 +415,11 @@ if __name__ == "__main__":
     parseArguments()
 
     # Are we on linux -> can we use the mic for entropy?
-    pltfrm_name=sys.platform
-    if(pltfrm_name!="linux") and (not Args.entropy):
-        print(" The entropy input by mic audio recording can be used only on Linux System" )
-        print(" Use the -e option to pass a string for entropy" )
-        exit()
+    # pltfrm_name=sys.platform
+    # if(pltfrm_name!="linux") and (not Args.entropy):
+    #     print(" The entropy input by mic audio recording can be used only on Linux System" )
+    #     print(" Use the -e option to pass a string for entropy" )
+    #     exit()
 
     # How to generate private key?
     if (Args.restore):
