@@ -75,6 +75,7 @@ SAMPLE_RATE = 44100     # rate of sampling for audio recording
 Args = {}               # Parameters received from command line argiments
 dataDict={}             # Dictionaries of values to share between BC address creation functions (RORO approach)
 
+JOut={}                 # JSON Output Object
 
 ####################################################################################################
 ##
@@ -198,6 +199,108 @@ def deriveBIP38():
     passphrase = Args.password
     return format(encrypt(PrivateKey(privkey),passphrase), "encwif")
 
+def deriveEVMaddress():
+    # get the uncompressed public key (remove first byte and concat X and Y) 
+    pu = dataDict["publicKey_uncompressed"].hex()[2:]
+    # hash uncompressed public key with keccak algorithm
+    k = Web3.keccak(hexstr=pu)
+    # add "0x" at the beginning to show it's hex, the get the last 20 bytes of it
+    addr = "0x"+k.hex()[-40:]
+    # Turn in into CheCKSuM addresse format (case sensitive)
+    return Web3.toChecksumAddress(addr)
+
+def deriveUTCJSON(indent = True):
+    if Args.password == None:
+        return "Cannot generate JSON-UTC file, no password provided. Use '-p' or '--password'"
+    jutc= eth_keyfile.create_keyfile_json(bytes.fromhex(dataDict["privateKey"]), Args.password.encode("utf-8"))
+    
+    if indent:
+        return  re.sub(r'^|\n'  ,'\n\t\t'  , json.dumps(jutc,indent=4))
+    else:
+        return jutc
+
+def EVMJson():
+    eth = {}
+    eth['address'] = deriveEVMaddress()
+    if Args.password != None:
+        eth['UTC-JSON'] = deriveUTCJSON(False)
+    return eth
+
+####################################################################################################
+##
+## RESULT JSON EXPORTING FUNCTIONS
+##
+
+def jsonExportPrivate():
+    global JOut
+    private = {}
+    private['privateKey']=dataDict["privateKey"]
+    private['publicKey']=dataDict["publicKey"].hex()
+    private['publicKeyUncompressed']=dataDict["publicKey_uncompressed"].hex()
+    private['bip39words']=dataDict["BIP39Words"]
+    private['network'] = "testnet" if Args.testnet else "main"
+    JOut['wallet'] = {}
+    JOut['keys'] = private
+
+def jsonExportBitcoinWallet():
+    global JOut
+    bitcoin = {}
+    
+    key = dataDict["bitcoinKey"]
+    bitcoin['hash160']=dataDict["hash160"].hex()
+    prefix = "EF" if Args.testnet else "80"
+    bitcoin['WIF']=deriveWIF(prefix, True)
+    if Args.password != None:
+            bitcoin['BIP38']=deriveBIP38()
+    bitcoin['address']=key.address
+    bitcoin['segwitAddress']=key.segwit_address
+    bitcoin['bech32'] = bech32.encode('tb', 0, dataDict["hash160"]) if Args.testnet else bech32.encode('bc', 0, dataDict["hash160"]) 
+    bitcoin['network'] = "testnet" if Args.testnet else "main"
+
+    JOut['wallet']['bitcoin'] = bitcoin
+
+
+def jsonExportEthereumWallet():
+    global JOut
+    JOut['wallet']['ethereum'] = EVMJson()
+
+
+def jsonExportEthereumClassicWallet():
+    global JOut
+    JOut['wallet']['ethereumClassic'] = EVMJson()
+
+
+def jsonExportQuadransWallet():
+    global JOut
+    JOut['wallet']['quadrans'] = EVMJson()
+
+
+def jsonExportDashWallet():
+    global JOut
+    dash = {}
+    prefix = "EF" if Args.testnet else "CC"
+    dash['network'] = "testnet" if Args.testnet else "main"
+    dash['WIF'] = deriveWIF(prefix, True)
+
+    # Address generation is same as Bitcoin, it only changes the version byte
+    dash['addrP2PKH'] = pub2bitaddr("8c", dataDict["publicKey"]) if Args.testnet else pub2bitaddr("4c", dataDict["publicKey"]) 
+    dash['addrP2SH'] = pub2bitaddr("13", dataDict["publicKey"]) if Args.testnet else pub2bitaddr("10", dataDict["publicKey"])
+    JOut['wallet']['dash'] = dash
+
+
+def jsonExportLiteCoinWallet():
+    global JOut
+    lite = {}
+    prefix = "EF" if Args.testnet else "B0"
+    lite['WIF'] = deriveWIF(prefix, True)
+    # Address generation is same as Bitcoin, it only changes the version byte
+    lite['address'] = pub2bitaddr("6f", dataDict["publicKey"]) if Args.testnet else pub2bitaddr("30", dataDict["publicKey"])
+    if not Args.testnet:
+        lite['bech32'] = bech32.encode('ltc', 0, dataDict["hash160"])
+    lite['network'] = "testnet" if Args.testnet else "main"
+    JOut['wallet']['litecoin'] = lite
+
+
 
 ####################################################################################################
 ##
@@ -213,111 +316,71 @@ def banner(color, name):
     print(bgc + ef.bold + "{:^20}".format(name) + rs.bg + rs.bold_dim)
 
 
+def printSeed():
+    ## DISPLAY RESULTS TO STDOUT
+    banner("white","Seed")
+    print("\tPrivate key: ", JOut['keys']['privateKey'])
+    print("\tPublic key   ", JOut['keys']['publicKey'], " (Secp256k1 compressed)")
+    print("\tPublic key:  ",JOut['keys']['publicKeyUncompressed'], " (uncompressed)")
+
+    if Args.wordlist:
+        print("\tBIP39 Seed:     ", end="")
+        for idx, word in enumerate(JOut['keys']['bip39words'].split(" ")):
+            print("{:2}){:12}\t".format(idx+1,word), end="")
+            if ((idx+1) % 6 == 0):
+                print("\n\t\t\t", end="")
+    else: 
+        print("\tBIP39 Seed:  ", JOut['keys']['bip39words'])
+
+
 def printBitcoinWallet():
     banner((255, 150, 50), "Bitcoin")
-    """
-        Print Bitcoin Wallet data:
-            Hash160, WIF, BIP38, Address, SegWit Addr, Bech32 Addr
-    """
-    # Bitcoin
-    key = dataDict["bitcoinKey"]
-
-    print("\tHash160:     ", dataDict["hash160"].hex(), "(ripmed160(sha256(pub)))")
-    # print("\tWIF:         ", key.to_wif())
-    prefix = "EF" if Args.testnet else "80"
-    print("\tWIF:         ", deriveWIF(prefix, True))
+    print("\tNetwork:     ", JOut['wallet']['bitcoin']['network'])
+    print("\tHash160:     ", JOut['wallet']['bitcoin']['hash160'], "(ripmed160(sha256(pub)))")
+    print("\tWIF:         ", JOut['wallet']['bitcoin']['WIF'])
     if Args.password != None:
-        print("\tBIP38:       ", deriveBIP38(), "(encrypted private key)")
-    print("\tAddress:     ", key.address, " (P2PKH)")
-    print("\tSegWit Addr: ", key.segwit_address)
-    bech = bech32.encode('tb', 0, dataDict["hash160"]) if Args.testnet else bech32.encode('bc', 0, dataDict["hash160"]) 
-    print("\tBech32 Addr: ", bech)
-
-
-def deriveEVMaddress():
-    # get the uncompressed public key (remove first byte and concat X and Y) 
-    pu = dataDict["publicKey_uncompressed"].hex()[2:]
-    # hash uncompressed public key with keccak algorithm
-    k = Web3.keccak(hexstr=pu)
-    # add "0x" at the beginning to show it's hex, the get the last 20 bytes of it
-    addr = "0x"+k.hex()[-40:]
-    # Turn in into CheCKSuM addresse format (case sensitive)
-    return Web3.toChecksumAddress(addr)
-
-def deriveUTCJSON():
-    if Args.password == None:
-        return "Cannot generate JSON-UTC file, no password provided. Use '-p' or '--password'"
-    juct = eth_keyfile.create_keyfile_json(bytes.fromhex(dataDict["privateKey"]), Args.password.encode("utf-8"))
-    return  re.sub(r'^|\n'  ,'\n\t\t'  , json.dumps(juct,indent=4))
+        print("\tBIP38:       ", JOut['wallet']['bitcoin']['BIP38'], "(encrypted private key)")
+    print("\tAddress:     ", JOut['wallet']['bitcoin']['address'], " (P2PKH)")
+    print("\tSegWit Addr: ", JOut['wallet']['bitcoin']['segwitAddress'])
+    print("\tBech32 Addr: ", JOut['wallet']['bitcoin']['bech32'])
 
 
 def printEthereumWallet():
     banner((150, 150, 150),"Ethereum")
-    """
-        Print Ethereum Wallet data:
-            Address:
-    """
-    print("\tAddress:     ", deriveEVMaddress())
+    print("\tAddress:     ", JOut['wallet']['ethereum']['address'])
     if Args.password != None:
         print("\tUTC-JSON:    ", deriveUTCJSON())
 
 
 def printEthereumClassicWallet():
     banner((0, 150, 0),"EthereumClassic")
-    """
-        Print Ethereum Wallet data:
-            Address:
-    """
-    print("\tAddress:     ", deriveEVMaddress())
+    print("\tAddress:     ", JOut['wallet']['ethereumClassic']['address'])
     if Args.password != None:
         print("\tUTC-JSON:    ", deriveUTCJSON())
 
 
 def printQuadransWallet():
     banner((150, 0, 150),"Quadrans")
-    """
-        Print Ethereum Wallet data:
-            Address:
-    """
-    print("\tAddress:     ", deriveEVMaddress())
+    print("\tAddress:     ", JOut['wallet']['quadrans']['address'])
     if Args.password != None:
         print("\tUTC-JSON:    ", deriveUTCJSON())
 
 
 def printDashWallet():
     banner((50, 50, 255),"Dash")
-    """
-        Print Dash Wallet data:
-	        Address: (P2PKH)
-	        Address: (P2SH)
-    """
-    prefix = "EF" if Args.testnet else "CC"
-    wif = deriveWIF(prefix, True)
-    print("\tWIF:         ", wif)
-
-    # Address generation is same as Bitcoin, it only changes the version byte
-    addrP2PKH = pub2bitaddr("8c", dataDict["publicKey"]) if Args.testnet else pub2bitaddr("4c", dataDict["publicKey"]) 
-    print("\tAddress:     ", addrP2PKH, " (P2PKH)")
-    addrP2SH = pub2bitaddr("13", dataDict["publicKey"]) if Args.testnet else pub2bitaddr("10", dataDict["publicKey"])
-    print("\tAddress:     ", addrP2SH, " (P2SH)")
+    print("\tNetwork:     ", JOut['wallet']['dash']['network'])
+    print("\tWIF:         ", JOut['wallet']['dash']['WIF'])
+    print("\tAddress:     ", JOut['wallet']['dash']['addrP2PKH'], " (P2PKH)")
+    print("\tAddress:     ", JOut['wallet']['dash']['addrP2SH'], " (P2SH)")
 
 
 def printLiteCoinWallet():
     banner((100, 100, 100),"Litecoin")
-    """
-        Print Litecoin Wallet data:
-	        Address: (P2PKH)
-	        Bech32 Addr:
-    """
-    prefix = "EF" if Args.testnet else "B0"
-    wif = deriveWIF(prefix, True)
-    print("\tWIF:         ", wif)
-    # Address generation is same as Bitcoin, it only changes the version byte
-    addr = pub2bitaddr("6f", dataDict["publicKey"]) if Args.testnet else pub2bitaddr("30", dataDict["publicKey"])
-    print("\tAddress:     ", addr, " (P2PKH)")
+    print("\tNetwork:     ", JOut['wallet']['litecoin']['network'])
+    print("\tWIF:         ", JOut['wallet']['litecoin']['WIF'])
+    print("\tAddress:     ", JOut['wallet']['litecoin']['address'], " (P2PKH)")
     if not Args.testnet:
-        bech = bech32.encode('ltc', 0, dataDict["hash160"]) 
-        print("\tBech32 Addr: ", bech)
+        print("\tBech32 Addr: ", JOut['wallet']['litecoin']['bech32'])
 
 
 ####################################################################################################
@@ -329,43 +392,41 @@ def printLiteCoinWallet():
 def main():    
     global dataDict
     global Args
+    global JOut
 
-    ## DISPLAY RESULTS
-    banner("white","Seed")
-    print("\tPrivate key: ", dataDict["privateKey"])
-    ## Public key
-    # the first byte is to identify if it's in compressed or uncompressed format
-    # compressed format uses only X coordinates of public point
-    print("\tPublic key   ", dataDict["publicKey"].hex(), " (Secp256k1 compressed)")
-    # uncompressed format uses both X and Y coordinates of public point
-    print("\tPublic key:  ", dataDict["publicKey_uncompressed"].hex(), " (uncompressed)")
 
-    if Args.wordlist:
-        print("\tBIP39 Seed:     ", end="")
-        for idx, word in enumerate(dataDict["BIP39Words"].split(" ")):
-            print("{:2}){:12}\t".format(idx+1,word), end="")
-            if ((idx+1) % 6 == 0):
-                print("\n\t\t\t", end="")
-    else: 
-        print("\tBIP39 Seed:  ", dataDict["BIP39Words"])
-
+    ## Get all data into JOut json object
+    jsonExportPrivate()
     if Args.blockchain in ["all","Bitcoin", "btc", "xbt"]:
-        printBitcoinWallet()
-
+        jsonExportBitcoinWallet()
     if Args.blockchain in ["all","Ethereum", "eth"]:
-        printEthereumWallet()
-
+        jsonExportEthereumWallet()
     if Args.blockchain in ["all","EthereumClassic", "etc"]:
-        printEthereumClassicWallet()
-
+        jsonExportEthereumClassicWallet()
     if Args.blockchain in ["all","Quadrans", "qdc"]:
-        printQuadransWallet()
-
+        jsonExportQuadransWallet()
     if Args.blockchain in ["all","Dash", "dash"]:
-        printDashWallet()
-
+        jsonExportDashWallet()
     if Args.blockchain in ["all","Litecoin", "ltc"]:
-        printLiteCoinWallet()
+        jsonExportLiteCoinWallet()
+
+    ## How to output?
+    if Args.json :
+        print (json.dumps(JOut,indent=4))
+    else :
+        printSeed()
+        if Args.blockchain in ["all","Bitcoin", "btc", "xbt"]:
+            printBitcoinWallet()
+        if Args.blockchain in ["all","Ethereum", "eth"]:
+            printEthereumWallet()
+        if Args.blockchain in ["all","EthereumClassic", "etc"]:
+            printEthereumClassicWallet()
+        if Args.blockchain in ["all","Quadrans", "qdc"]:
+            printQuadransWallet()
+        if Args.blockchain in ["all","Dash", "dash"]:
+            printDashWallet()
+        if Args.blockchain in ["all","Litecoin", "ltc"]:
+            printLiteCoinWallet()
 
 
 
@@ -385,16 +446,15 @@ def parseArguments():
             "Dash", "dash"
             ])
 
-
     parser.add_argument("-wn", "--wordnumber", help="Optional, print BIP39 word list in numbered table", dest='wordlist', action='store_const', const=True, default=False)
     parser.add_argument("-e", "--entropy", help="An optional random string in case you prefer providing your own entropy", type=str, required=False)
     parser.add_argument("-l", "--language", help="Optional, the language for the mnemonic words list (BIP39). Default: english", type=str, required=False, default="english", choices=["english", "chinese_simplified", "chinese_traditional", "french", "italian", "japanese", "korean", "spanish"])
     parser.add_argument("-t", "--testnet", help="Generate addresses for test net (default is main net)", dest='testnet', action='store_const', const=True, default=False)
     parser.add_argument("-r", "--restore", help="Restore a wallet from BIP39 word list", dest="restore", type=str, required=False)
     parser.add_argument("-p", "--password", help="Password for wallet encryption", dest="password", type=str, required=False)
-
-    ## Yet to be implemented
     parser.add_argument("-j", "--json", help="Produce only json output", dest='json', action='store_const', const=True, default=False)
+    
+    ## Yet to be implemented
     parser.add_argument("-d", "--directory", help="An optional where to save produced files (json and qr codes)", type=str, required=False, default=".")
     parser.add_argument("-q", "--qrcode", help="Generate qrcodes for addresses and keys", dest='qrcode', action='store_const', const=True, default=False)
 
@@ -413,13 +473,6 @@ if sys.version_info[0] < 3:
 if __name__ == "__main__": 
     # What does the user want?
     parseArguments()
-
-    # Are we on linux -> can we use the mic for entropy?
-    # pltfrm_name=sys.platform
-    # if(pltfrm_name!="linux") and (not Args.entropy):
-    #     print(" The entropy input by mic audio recording can be used only on Linux System" )
-    #     print(" Use the -e option to pass a string for entropy" )
-    #     exit()
 
     # How to generate private key?
     if (Args.restore):
