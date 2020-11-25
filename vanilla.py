@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+    #!/usr/bin/python3
 
 """
     Vanilla Wallet: a multi currency cold store wallet
@@ -38,13 +38,13 @@
 
 """
 
-
 ### Imports
 import sys
 import argparse
 import subprocess
 import json
 import re
+import io
 from sty import fg, bg, ef, rs
 import sounddevice as sd
 
@@ -64,6 +64,7 @@ import binascii
 from binascii import hexlify, unhexlify
 import hashlib
 
+import pdfwallet as pdfw
 
 ### Globlals & Constants 
 
@@ -301,7 +302,6 @@ def jsonExportLiteCoinWallet():
     JOut['wallet']['litecoin'] = lite
 
 
-
 ####################################################################################################
 ##
 ## RESULT PRINTING FUNCTIONS
@@ -385,7 +385,7 @@ def printLiteCoinWallet():
 
 ####################################################################################################
 ##
-## RESULT PRINTING FUNCTIONS
+## MAIN AND ARGS PROCESSING FUNCTIONS
 ##
 
 
@@ -393,7 +393,6 @@ def main():
     global dataDict
     global Args
     global JOut
-
 
     ## Get all data into JOut json object
     jsonExportPrivate()
@@ -428,6 +427,10 @@ def main():
         if Args.blockchain in ["all","Litecoin", "ltc"]:
             printLiteCoinWallet()
 
+    ## Generate Paper Wallet PDF?
+    if Args.pdf :
+        if Args.blockchain in ["all","Bitcoin", "btc", "xbt"]:
+            pdfw.pdfBitcoinWallet(JOut)
 
 
 def parseArguments():
@@ -457,6 +460,9 @@ def parseArguments():
     ## Yet to be implemented
     parser.add_argument("-d", "--directory", help="An optional where to save produced files (json and qr codes)", type=str, required=False, default=".")
     parser.add_argument("-q", "--qrcode", help="Generate qrcodes for addresses and keys", dest='qrcode', action='store_const', const=True, default=False)
+
+    ## Testing
+    parser.add_argument("-P", "--pdf", help="Produce paper wallet PDF file", dest='pdf', action='store_const', const=True, default=False)
 
     Args = parser.parse_args()
 

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:svg="http://www.w3.org/2000/svg" xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd" xmlns:ns1="http://sozi.baierouge.fr" id="svg2" viewBox="0 0 200 200" version="1.1" inkscape:version="0.91 r13725">
+  <symbol id="base">
+    <ellipse id="ellipse7" cy="0" cx="0" rx="20" ry="99"/>
+  </symbol>
+  <rect id="rect9" style="fill:#ffffff" height="200" width="200" y="0" x="0"/>
+  <g id="shape">
+    <g id="g12" transform="translate(100,100)">
+      <use id="use14" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#base" height="200" width="200" y="0" x="0"/>
+    </g>
+    <g id="g16" transform="translate(100,100)">
+      <use id="use18" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#base" transform="scale(.95)" height="200" width="200" y="0" x="0"/>
+    </g>
+    <g id="g20" transform="translate(100,100)">
+      <use id="use22" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#base" transform="scale(.9)" height="200" width="200" y="0" x="0"/>
+    </g>
+    <g id="g24" transform="translate(100,100)">
+      <use id="use26" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#base" transform="scale(.85)" height="200" width="200" y="0" x="0"/>
+    </g>
+    <g id="g28" transform="translate(100,100)">
+      <use id="use30" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#base" transform="scale(.8)" height="200" width="200" y="0" x="0"/>
+    </g>
+    <g id="g32" transform="translate(100,100)">
+      <use id="use34" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#base" transform="scale(.75)" height="200" width="200" y="0" x="0"/>
+    </g>
+    <g id="g36" transform="translate(100,100)">
+      <use id="use38" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#base" transform="scale(.7)" height="200" width="200" y="0" x="0"/>
+    </g>
+  </g>
+  <use id="use40" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#shape" transform="matrix(.96593 .25882 -.25882 .96593 29.289 -22.474)" height="200" width="200" y="0" x="0"/>
+  <use id="use42" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#shape" transform="matrix(.86603 .5 -.5 .86603 63.397 -36.603)" height="200" width="200" y="0" x="0"/>
+  <use id="use44" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#shape" transform="matrix(.70711 .70711 -.70711 .70711 100 -41.421)" height="200" width="200" y="0" x="0"/>
+  <use id="use46" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#shape" transform="matrix(.5 .86603 -.86603 .5 136.6 -36.603)" height="200" width="200" y="0" x="0"/>
+  <use id="use48" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#shape" transform="matrix(.25882 .96593 -.96593 .25882 170.71 -22.474)" height="200" width="200" y="0" x="0"/>
+  <use id="use50" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#shape" transform="matrix(0,1,-1,0,200,0)" height="200" width="200" y="0" x="0"/>
+  <use id="use52" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#shape" transform="matrix(-.25882 .96593 -.96593 -.25882 222.47 29.289)" height="200" width="200" y="0" x="0"/>
+  <use id="use54" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#shape" transform="matrix(-.5 .86603 -.86603 -.5 236.6 63.397)" height="200" width="200" y="0" x="0"/>
+  <use id="use56" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#shape" transform="matrix(-.70711 .70711 -.70711 -.70711 241.42 100)" height="200" width="200" y="0" x="0"/>
+  <use id="use58" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#shape" transform="matrix(-.86603 .5 -.5 -.86603 236.6 136.6)" height="200" width="200" y="0" x="0"/>
+  <use id="use60" style="color:#000000;stroke:#000000;stroke-width:.76371;fill:none" xlink:href="#shape" transform="matrix(-.96593 .25882 -.25882 -.96593 222.47 170.71)" height="200" width="200" y="0" x="0"/>
+  <use id="use3839" xlink:href="#path3061" transform="matrix(.8 0 0 .8 20 20)" height="200" width="200" y="0" x="0"/>
+  <use id="use3845" xlink:href="#path3061" transform="matrix(.6 0 0 .6 40 40)" height="200" width="200" y="0" x="0"/>
+  <use id="use3847" style="stroke-width:1.25" xlink:href="#path3061" transform="matrix(.4 0 0 .4 60 60)" height="200" width="200" y="0" x="0"/>
+  <path id="path3849" style="color:#000000;stroke:#000000;stroke-width:.38247;fill:#ffffff" d="m-112.44 34.781a4.5295 4.5295 0 0 0 -2.625 0.96875l-5.5938 4.375-7-1a4.5295 4.5295 0 0 0 -4.875 2.7812l-2.625 6.5938-6.5625 2.625a4.5295 4.5295 0 0 0 -2.79 4.844l1 6.9688-4.375 5.5938a4.5295 4.5295 0 0 0 0 5.5625l4.375 5.5938-1 6.9688a4.5295 4.5295 0 0 0 2.7812 4.8438l6.5625 2.625 2.625 6.5938a4.5295 4.5295 0 0 0 4.875 2.7812l7-1 5.5938 4.375a4.5295 4.5295 0 0 0 5.5938 0l5.5625-4.375 6.9688 1a4.5295 4.5295 0 0 0 4.875 -2.7812l2.625-6.5938 6.5625-2.625a4.5295 4.5295 0 0 0 2.7812 -4.8438l-1-6.9688 4.375-5.5938a4.5295 4.5295 0 0 0 0 -5.5625l-4.375-5.5938 1-6.9688a4.5295 4.5295 0 0 0 -2.77 -4.844l-6.5625-2.625-2.625-6.5938a4.5295 4.5295 0 0 0 -4.875 -2.7812l-6.9688 1-5.5625-4.375a4.5295 4.5295 0 0 0 -2.9688 -0.96875z" transform="matrix(1.1845 0 0 1.1845 233.02 15.529)"/>
+  <use id="use3853" xlink:href="#path3849" transform="matrix(.87752 0 0 .87752 12.248 12.248)" height="200" width="200" y="0" x="0"/>
+  <use id="use3855" xlink:href="#path3849" transform="matrix(.75504 0 0 .75504 24.496 24.496)" height="200" width="200" y="0" x="0"/>
+  <use id="use3857" xlink:href="#path3849" transform="matrix(.63256 0 0 .63256 36.744 36.744)" height="200" width="200" y="0" x="0"/>
+  <path id="path3873" style="stroke-linejoin:round;color:#000000;stroke:#000000;stroke-linecap:square;stroke-width:.5;fill:none" d="m102.46 106.15a1.8443 36.885 0 1 1 -3.6885 0 1.8443 36.885 0 1 1 3.6885 0z" transform="translate(-.61710 -6.1495)"/>
+  <use id="use3877" xlink:href="#path3873" transform="matrix(.96593 .25882 -.25882 .96593 29.289 -22.474)" height="200" width="200" y="0" x="0"/>
+  <use id="use3879" xlink:href="#path3873" transform="matrix(.86603 0.5 -0.5 .86603 63.396 -36.602)" height="200" width="200" y="0" x="0"/>
+  <use id="use3881" xlink:href="#path3873" transform="matrix(.70711 .70711 -.70711 .70711 99.998 -41.42)" height="200" width="200" y="0" x="0"/>
+  <use id="use3883" xlink:href="#path3873" transform="matrix(.5 .86603 -.86603 .5 136.6 -36.602)" height="200" width="200" y="0" x="0"/>
+  <use id="use3885" xlink:href="#path3873" transform="matrix(.25882 .96593 -.96593 .25882 170.71 -22.474)" height="200" width="200" y="0" x="0"/>
+  <use id="use3887" xlink:href="#path3873" transform="matrix(0 1 -1 0 200 .00034042)" height="200" width="200" y="0" x="0"/>
+  <use id="use3889" xlink:href="#path3873" transform="matrix(0 1 -1 0 200 .00034097)" height="200" width="200" y="0" x="0"/>
+  <use id="use3891" xlink:href="#path3873" transform="matrix(-.25882 .96593 -.96593 -.25882 222.47 29.289)" height="200" width="200" y="0" x="0"/>
+  <use id="use3893" xlink:href="#path3873" transform="matrix(-0.5 .86603 -.86603 -0.5 236.6 63.396)" height="200" width="200" y="0" x="0"/>
+  <use id="use3895" xlink:href="#path3873" transform="matrix(-.70711 .70711 -.70711 -.70711 241.42 99.998)" height="200" width="200" y="0" x="0"/>
+  <use id="use3897" xlink:href="#path3873" transform="matrix(-.86603 .5 -.5 -.86603 236.6 136.6)" height="200" width="200" y="0" x="0"/>
+  <use id="use3899" xlink:href="#path3873" transform="matrix(-.96593 .25882 -.25882 -.96593 222.47 170.71)" height="200" width="200" y="0" x="0"/>
+  <use id="use3912" xlink:href="#path3903" transform="matrix(.71513 .41288 -.41288 .71513 69.72 -12.722)" height="200" width="200" y="0" x="0"/>
+  <use id="use3916" xlink:href="#path3903" transform="matrix(0 .82576 -.82576 0 182.38 17.58)" height="200" width="200" y="0" x="0"/>
+  <use id="use3920" xlink:href="#path3903" transform="matrix(-.71513 .41288 -.41288 -.71513 212.47 130.3)" height="200" width="200" y="0" x="0"/>
+  <use id="use3924" xlink:href="#path3903" transform="matrix(-.71513 -.41288 .41288 -.71513 129.9 212.72)" height="200" width="200" y="0" x="0"/>
+  <use id="use3928" xlink:href="#path3903" transform="matrix(0 -.82576 .82576 0 17.234 182.42)" height="200" width="200" y="0" x="0"/>
+  <use id="use3930" xlink:href="#path3903" transform="matrix(.71513 -.41288 .41288 .71513 -12.854 69.696)" height="200" width="200" y="0" x="0"/>
+  <use id="use3932" xlink:href="#path3903" transform="matrix(.5 -.86603 .86603 .5 -36.697 136.44)" height="200" width="200" y="0" x="0"/>
+  <path id="path3903" style="color:#000000;stroke:#000000;stroke-width:.5;fill:#ffffff" d="m99.809 77.889c-1.44 1.5508-1.9781 2.7151-3.2772 2.8718-1.4084 0.16983-2.5433 2.5843-2.4325 4.1049 0.10243 1.4062 1.3176 3.3616 1.3176 3.3616h4.3921 4.3921s1.2152-1.9555 1.3176-3.3616c0.11077-1.5207-1.0242-3.9351-2.4326-4.1049-1.2991-0.15665-1.8372-1.321-3.2772-2.8718z"/>
+  <use id="use3914" xlink:href="#path3903" transform="matrix(.5 .86603 -.86603 .5 136.51 -36.438)" height="200" width="200" y="0" x="0"/>
+  <use id="use3918" xlink:href="#path3903" transform="matrix(-.5 .86603 -.86603 -.5 236.31 63.56)" height="200" width="200" y="0" x="0"/>
+  <use id="use3922" xlink:href="#path3903" transform="matrix(-1 0 0 -1 199.62 200)" height="200" width="200" y="0" x="0"/>
+  <use id="use3926" xlink:href="#path3903" transform="matrix(-.5 -.86603 .86603 -.5 63.112 236.43)" height="200" width="200" y="0" x="0"/>
+  <path id="path3901" style="stroke-linejoin:round;color:#000000;stroke:#000000;stroke-linecap:square;stroke-width:.5;fill:#ffffff" d="m113.93 98.77a13.934 13.934 0 1 1 -27.869 0 13.934 13.934 0 1 1 27.869 0z" transform="translate(-.0023444 1.2275)"/>
+  <metadata>
+    <rdf:RDF>
+      <cc:Work>
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <cc:license rdf:resource="http://creativecommons.org/licenses/publicdomain/"/>
+        <dc:publisher>
+          <cc:Agent rdf:about="http://openclipart.org/">
+            <dc:title>Openclipart</dc:title>
+          </cc:Agent>
+        </dc:publisher>
+        <dc:title>Guilloche Rosette</dc:title>
+        <dc:date>2011-01-30T20:30:52</dc:date>
+        <dc:description>Rosette Pattern using Guilloché effect</dc:description>
+        <dc:source>https://openclipart.org/detail/110497/guilloche-rosette-by-kuba</dc:source>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>kuba</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>Guilloche</rdf:li>
+            <rdf:li>Guilloché</rdf:li>
+            <rdf:li>Rosette</rdf:li>
+            <rdf:li>certificate</rdf:li>
+            <rdf:li>element</rdf:li>
+            <rdf:li>pattern</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+      </cc:Work>
+      <cc:License rdf:about="http://creativecommons.org/licenses/publicdomain/">
+        <cc:permits rdf:resource="http://creativecommons.org/ns#Reproduction"/>
+        <cc:permits rdf:resource="http://creativecommons.org/ns#Distribution"/>
+        <cc:permits rdf:resource="http://creativecommons.org/ns#DerivativeWorks"/>
+      </cc:License>
+    </rdf:RDF>
+  </metadata>
+</svg>
