@@ -1,4 +1,4 @@
-    #!/usr/bin/python3
+#!/usr/bin/python3
 
 """
     Vanilla Wallet: a multi currency cold store wallet
@@ -11,7 +11,7 @@
         Litecoin
         Dash
 
-    NOTE:
+    _NOTE:
         This code is provided "AS IS" with all faults, defects, bugs, and errors.
         Developers, authors  and mantainers of the code makes no warranties, express
         or implied, and hereby disclaims all implied warranties, including any 
@@ -429,8 +429,8 @@ def main():
 
     ## Generate Paper Wallet PDF?
     if Args.pdf :
-        if Args.blockchain in ["all","Bitcoin", "btc", "xbt"]:
-            pdfw.pdfBitcoinWallet(JOut)
+        for coin in JOut['wallet'].keys():
+            pdfw.pdfPaperWallet(JOut, coin)
 
 
 def parseArguments():

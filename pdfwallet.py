@@ -10,6 +10,8 @@ from svglib.svglib import svg2rlg
 from reportlab.graphics import renderPDF
 import sys, os, subprocess
 
+import svglogos
+
 def svg2pdf(infile, outfile):
     ### SVG to PDF with Chrome
     bashCommand = "brave-browser --headless --disable-gpu --landscape=1 --print-to-pdf="+outfile+" "+infile
@@ -27,43 +29,79 @@ def qr64(info):
     buffStr=None
     return result
 
-def pdfBitcoinWallet(JOut):
+def pdfPaperWallet(JOut, coin):
     # global JOut
 
-    address=JOut['wallet']['bitcoin']['address']
-    words=JOut['keys']['bip39words'].split(" ")
-    segwitAddress=JOut['wallet']['bitcoin']['segwitAddress']
-    bech32=JOut['wallet']['bitcoin']['bech32']
-    privateKey=JOut['keys']['privateKey']
+    ## Do we have an address?? (special case for Dash)
+    if 'address' in JOut['wallet'][coin].keys():
+        address=JOut['wallet'][coin]['address']
+    elif 'addrP2PKH' in JOut['wallet'][coin].keys():
+        address=JOut['wallet'][coin]['addrP2PKH']
 
+    words=JOut['keys']['bip39words'].split(" ")
     mnemonic1=', '.join(words[0:12])
     mnemonic2=', '.join(words[12:24])
-    wif=JOut['wallet']['bitcoin']['WIF']
-    wt=''
+    privateKey=JOut['keys']['privateKey']
 
-    with open('gfx/T3.svg','r') as file:
+    wt=''
+    with open('gfx/T5.svg','r') as file:
         wt = file.read()
 
-    ## Make all qrcodes as base64 string
-    address_qr = qr64(address)
-    segwit_qr = qr64(segwitAddress)
-    bech32_qr = qr64(bech32)
-    private_qr = qr64(privateKey)
+    ## Replace the coin name and logo
+    wt=wt.replace('__coin_svg_logo__', svglogos.coin_svg[coin]['gliph'] )\
+        .replace('__transform__', svglogos.coin_svg[coin]['transform'] )\
+        .replace('__coin_name__', coin.capitalize() )
 
+    ## Replace basic values (those can't be missing!!)
+    address_qr = qr64(address)
+    private_qr = qr64(privateKey)
+    wt=wt.replace('__legacy-qr__', 'data:image/png;base64,'+address_qr)\
+        .replace('__private-qr__', 'data:image/png;base64,'+private_qr)\
+        .replace('__legacy__', address)\
+        .replace('__private__',privateKey)        
+    
     ## Replace SVG Placehoders with actual values
     for idx, word in enumerate(JOut['keys']['bip39words'].split(" ")):
         wordPH='__{}__'.format(idx+1)
         wt=wt.replace(wordPH,word)
 
-    wt=wt.replace('__legacy-qr__', 'data:image/png;base64,'+address_qr)\
-    .replace('__segwit-qr__', 'data:image/png;base64,'+segwit_qr)\
-    .replace('__bech32-qr__', 'data:image/png;base64,'+bech32_qr)\
-    .replace('__private-qr__', 'data:image/png;base64,'+private_qr)\
-    .replace('__legacy__', address)\
-    .replace('__wif__', wif)\
-    .replace('__segwit__',segwitAddress)\
-    .replace('__bech32__',bech32)\
-    .replace('__private__',privateKey)
+    
+    ## Do we have Segwit?
+    if 'segwitAddress' in JOut['wallet'][coin].keys():
+        segwitAddress= JOut['wallet'][coin]['segwitAddress']
+        segwit_qr = qr64(segwitAddress)
+        wt = wt.replace('__segwit__',segwitAddress)
+        wt = wt.replace('__segwit-qr__', 'data:image/png;base64,'+segwit_qr)
+    elif 'addrP2SH' in JOut['wallet'][coin].keys():
+        p2sh = JOut['wallet'][coin]['addrP2SH']
+        p2sh_qr = qr64(p2sh)
+        wt = wt.replace('__segwit__',p2sh)
+        wt = wt.replace('__segwit-qr__', 'data:image/png;base64,'+p2sh_qr)
+        wt = wt.replace('SegWit','P2SH')
+    else:
+        wt = wt.replace('SegWit: __segwit__','')\
+            .replace('SegWit','')
+
+    ## Do we have bech32?
+    if 'bech32' in JOut['wallet'][coin].keys() :
+        bech32= JOut['wallet'][coin]['bech32']
+        bech32_qr = qr64(bech32)
+        wt = wt.replace('__bech32__',bech32)
+        wt = wt.replace('__bech32-qr__', 'data:image/png;base64,'+bech32_qr)
+    else:
+        wt = wt.replace('Bech 32: __bech32__','')\
+            .replace('Bech32','')
+
+    ## Do we have WIF?
+    if 'WIF' in JOut['wallet'][coin].keys():
+        wif=JOut['wallet'][coin]['WIF']
+        wt = wt.replace('__wif__', wif)
+    else:
+        wt = wt.replace('__wif__','')\
+            .replace('WIF :','')
+
+
+
 
 
     ## Rotate SVG
