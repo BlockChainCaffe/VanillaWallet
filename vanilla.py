@@ -118,9 +118,7 @@ def generatePrivateKey():
 
     # Store raw private key
     dataDict["privateKey"] = hash0
-    # Create ECDSA private key
-    dataDict["bitcoinKey"] = bit.PrivateKeyTestnet.from_hex(dataDict["privateKey"]) if Args.testnet else bit.Key.from_hex(dataDict["privateKey"])
-
+    
 
 def deriveBIP39Words():
     global dataDict
@@ -141,7 +139,10 @@ def restoreWallet():
     mnemo = Mnemonic(Args.language)
     dataDict["BIP39Words"] = Args.restore
     ent = mnemo.to_entropy(dataDict["BIP39Words"])
+    # Store raw private key
     dataDict["privateKey"] = hexlify(ent).decode("utf-8")
+    # Create ECDSA private key
+    # dataDict["bitcoinKey"] = bit.PrivateKeyTestnet.from_hex(dataDict["privateKey"]) if Args.testnet else bit.Key.from_hex(dataDict["privateKey"])
 
 
 def hash160():
@@ -247,6 +248,8 @@ def jsonExportBitcoinWallet():
     global JOut
     bitcoin = {}
     
+    # Create ECDSA private key
+    dataDict["bitcoinKey"] = bit.PrivateKeyTestnet.from_hex(dataDict["privateKey"]) if Args.testnet else bit.Key.from_hex(dataDict["privateKey"])
     key = dataDict["bitcoinKey"]
     bitcoin['hash160']=dataDict["hash160"].hex()
     prefix = "EF" if Args.testnet else "80"
@@ -396,49 +399,51 @@ def main():
 
     ## Get all data into JOut json object
     jsonExportPrivate()
-    if Args.blockchain in ["all","Bitcoin", "btc", "xbt"]:
+    if set(Args.blockchain) & set(["all","Bitcoin", "btc", "xbt"]):
         jsonExportBitcoinWallet()
-    if Args.blockchain in ["all","Ethereum", "eth"]:
+    if set(Args.blockchain) & set(["all","Ethereum", "eth"]):
         jsonExportEthereumWallet()
-    if Args.blockchain in ["all","EthereumClassic", "etc"]:
+    if set(Args.blockchain) & set(["all","EthereumClassic", "etc"]):
         jsonExportEthereumClassicWallet()
-    if Args.blockchain in ["all","Quadrans", "qdc"]:
+    if set(Args.blockchain) & set(["all","Quadrans", "qdc"]):
         jsonExportQuadransWallet()
-    if Args.blockchain in ["all","Dash", "dash"]:
+    if set(Args.blockchain) & set(["all","Dash", "dash"]):
         jsonExportDashWallet()
-    if Args.blockchain in ["all","Litecoin", "ltc"]:
+    if set(Args.blockchain) & set(["all","Litecoin", "ltc"]):
         jsonExportLiteCoinWallet()
 
-    ## How to output?
-    if Args.json :
-        print (json.dumps(JOut,indent=4))
-    else :
+    ## Output in choosen type(s)
+    if set(Args.output) & set(["txt", "text", "t"]):
         printSeed()
-        if Args.blockchain in ["all","Bitcoin", "btc", "xbt"]:
+        if set(Args.blockchain) & set(["all","Bitcoin", "btc", "xbt"]):
             printBitcoinWallet()
-        if Args.blockchain in ["all","Ethereum", "eth"]:
+        if set(Args.blockchain) & set(["all","Ethereum", "eth"]):
             printEthereumWallet()
-        if Args.blockchain in ["all","EthereumClassic", "etc"]:
+        if set(Args.blockchain) & set(["all","EthereumClassic", "etc"]):
             printEthereumClassicWallet()
-        if Args.blockchain in ["all","Quadrans", "qdc"]:
+        if set(Args.blockchain) & set(["all","Quadrans", "qdc"]):
             printQuadransWallet()
-        if Args.blockchain in ["all","Dash", "dash"]:
+        if set(Args.blockchain) & set(["all","Dash", "dash"]):
             printDashWallet()
-        if Args.blockchain in ["all","Litecoin", "ltc"]:
+        if set(Args.blockchain) & set(["all","Litecoin", "ltc"]):
             printLiteCoinWallet()
-
-    ## Generate Paper Wallet PDF?
-    if Args.pdf :
+    if set(Args.output) & set(["json","j"]):
+        print (json.dumps(JOut,indent=4))
+    if set(Args.output) & set(["pdf","p"]):
         for coin in JOut['wallet'].keys():
             pdfw.pdfPaperWallet(JOut, coin)
+    if set(Args.output) & set(["qrcode","qr", "q"]):
+        pass
+    
+
 
 
 def parseArguments():
     global Args
     """ parsing arguments """
     parser = argparse.ArgumentParser("Vanilla Wallet command line arguments")
-    parser.add_argument("-bc", "--blockchain", help="Optional, the blockchain the wallet is generater for. Default: all", 
-        type=str, required=False, default="all",
+    parser.add_argument("-bc", "--blockchain", help="Optional, the blockchain(s) the wallet is generater for. Default: all", 
+        type=str, required=False, default="all", nargs='*',
         choices=[
             "all",
             "Bitcoin", "btc", "xbt", 
@@ -449,21 +454,21 @@ def parseArguments():
             "Dash", "dash"
             ])
 
-    parser.add_argument("-wn", "--wordnumber", help="Optional, print BIP39 word list in numbered table", dest='wordlist', action='store_const', const=True, default=False)
+    ## Input and data
     parser.add_argument("-e", "--entropy", help="An optional random string in case you prefer providing your own entropy", type=str, required=False)
     parser.add_argument("-l", "--language", help="Optional, the language for the mnemonic words list (BIP39). Default: english", type=str, required=False, default="english", choices=["english", "chinese_simplified", "chinese_traditional", "french", "italian", "japanese", "korean", "spanish"])
     parser.add_argument("-t", "--testnet", help="Generate addresses for test net (default is main net)", dest='testnet', action='store_const', const=True, default=False)
     parser.add_argument("-r", "--restore", help="Restore a wallet from BIP39 word list", dest="restore", type=str, required=False)
     parser.add_argument("-p", "--password", help="Password for wallet encryption", dest="password", type=str, required=False)
-    parser.add_argument("-j", "--json", help="Produce only json output", dest='json', action='store_const', const=True, default=False)
     
+    ## Output and format
+    parser.add_argument("-n", "--number", help="Optional, print BIP39 word list in numbered table", dest='wordlist', action='store_const', const=True, default=False)
+    parser.add_argument("-o", "--output", help="Type of desired output(s), can be specify multiple(json, pdf or qrcodes)", type=str, dest="output", nargs='*', required=False, default="txt", choices=['text', 'txt', 't', 'json', 'j', 'pdf', 'p', 'qrcode', 'qr', 'q'])
+
     ## Yet to be implemented
-    parser.add_argument("-d", "--directory", help="An optional where to save produced files (json and qr codes)", type=str, required=False, default=".")
-    parser.add_argument("-q", "--qrcode", help="Generate qrcodes for addresses and keys", dest='qrcode', action='store_const', const=True, default=False)
-
-    ## Testing
-    parser.add_argument("-P", "--pdf", help="Produce paper wallet PDF file", dest='pdf', action='store_const', const=True, default=False)
-
+    parser.add_argument("-d", "--directory", help="An optional where to save produced files (json, pdf or qrcodes)", type=str, required=False, default=".")
+    parser.add_argument("-T", "--template", help="Use alternative SVG template for paper wallet", dest="template", type=str, required=False)
+    
     Args = parser.parse_args()
 
 

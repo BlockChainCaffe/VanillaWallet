@@ -29,35 +29,48 @@ def qr64(info):
     buffStr=None
     return result
 
-def pdfPaperWallet(JOut, coin):
-    # global JOut
 
+####################################################################################################
+##
+## PDF PAPER TEMPLATE FILLING
+##
+
+def pdfPaperWallet(JOut, coin):
+
+    ## Open Template
+    wt=''
+    with open('gfx/T5.svg','r') as file:
+        wt = file.read()
+
+    ## Replace the coin name and logo (those can't be missing!!)
+    wt=wt.replace('__coin_svg_logo__', svglogos.coin_svg[coin]['gliph'] )\
+        .replace('__transform__', svglogos.coin_svg[coin]['transform'] )\
+        .replace('__coin_name__', coin.capitalize() )
+    
     ## Do we have an address?? (special case for Dash)
     if 'address' in JOut['wallet'][coin].keys():
         address=JOut['wallet'][coin]['address']
     elif 'addrP2PKH' in JOut['wallet'][coin].keys():
         address=JOut['wallet'][coin]['addrP2PKH']
+    address_qr = qr64(address)
+    wt=wt.replace('__legacy-qr__', 'data:image/png;base64,'+address_qr)
+    
+    ## Is it a BIP38 encrypted wallet?
+    if 'BIP38' in JOut['wallet'][coin].keys():
+        privateKey=JOut['wallet'][coin]['BIP38']
+        wt=wt.replace('__private__',privateKey+"(bip38)")
+    else:
+        privateKey=JOut['keys']['privateKey']
+        wt=wt.replace('__private__',privateKey)
+    private_qr = qr64(privateKey)
+    wt=wt.replace('__private-qr__', 'data:image/png;base64,'+private_qr)
 
-    words=JOut['keys']['bip39words'].split(" ")
-    mnemonic1=', '.join(words[0:12])
-    mnemonic2=', '.join(words[12:24])
-    privateKey=JOut['keys']['privateKey']
 
-    wt=''
-    with open('gfx/T5.svg','r') as file:
-        wt = file.read()
-
-    ## Replace the coin name and logo
-    wt=wt.replace('__coin_svg_logo__', svglogos.coin_svg[coin]['gliph'] )\
-        .replace('__transform__', svglogos.coin_svg[coin]['transform'] )\
-        .replace('__coin_name__', coin.capitalize() )
 
     ## Replace basic values (those can't be missing!!)
-    address_qr = qr64(address)
+    
     private_qr = qr64(privateKey)
-    wt=wt.replace('__legacy-qr__', 'data:image/png;base64,'+address_qr)\
-        .replace('__private-qr__', 'data:image/png;base64,'+private_qr)\
-        .replace('__legacy__', address)\
+    wt=wt.replace('__legacy__', address)\
         .replace('__private__',privateKey)        
     
     ## Replace SVG Placehoders with actual values
