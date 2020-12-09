@@ -26,6 +26,7 @@
     Credits:
         - Massimo S. Musumeci massmux https://github.com/massmux/bip39gen
         - MaxP
+        - Franco
 
     Licence:
         GNU General Public Licence V3
@@ -39,7 +40,7 @@
 """
 
 ### Imports
-import sys
+import sys, os
 import argparse
 import subprocess
 import json
@@ -95,6 +96,9 @@ def getNoise(sec):
 
 def generatePrivateKey():
     global dataDict
+    
+    spinner="-\|/"
+
     if (Args.entropy):
         # accept and use entropy string provided by user instead of mic one
         # print("You provided the entropy as a string")
@@ -111,10 +115,10 @@ def generatePrivateKey():
         salt0=getNoise(MIC_SLT_SEC)
 
     """ sha256 rounds """
-    print ("Iterating %s rounds of salted sha256 hashing... Please wait" % SHA_RND_RND )
+    print ("Iterating %s rounds of salted sha256 hashing..." % SHA_RND_RND )
     for i in range(0,SHA_RND_RND):
         hash0=hashlib.sha256((hash0+salt0).encode('utf-8')).hexdigest()
-
+    print()
 
     # Store raw private key
     dataDict["privateKey"] = hash0
@@ -141,8 +145,6 @@ def restoreWallet():
     ent = mnemo.to_entropy(dataDict["BIP39Words"])
     # Store raw private key
     dataDict["privateKey"] = hexlify(ent).decode("utf-8")
-    # Create ECDSA private key
-    # dataDict["bitcoinKey"] = bit.PrivateKeyTestnet.from_hex(dataDict["privateKey"]) if Args.testnet else bit.Key.from_hex(dataDict["privateKey"])
 
 
 def hash160():
@@ -249,8 +251,7 @@ def jsonExportBitcoinWallet():
     bitcoin = {}
     
     # Create ECDSA private key
-    dataDict["bitcoinKey"] = bit.PrivateKeyTestnet.from_hex(dataDict["privateKey"]) if Args.testnet else bit.Key.from_hex(dataDict["privateKey"])
-    key = dataDict["bitcoinKey"]
+    key = bit.PrivateKeyTestnet.from_hex(dataDict["privateKey"]) if Args.testnet else bit.Key.from_hex(dataDict["privateKey"])
     bitcoin['hash160']=dataDict["hash160"].hex()
     prefix = "EF" if Args.testnet else "80"
     bitcoin['WIF']=deriveWIF(prefix, True)
@@ -397,6 +398,9 @@ def main():
     global Args
     global JOut
 
+    outDir = Args.outDir
+    template = Args.template
+
     ## Get all data into JOut json object
     jsonExportPrivate()
     if set(Args.blockchain) & set(["all","Bitcoin", "btc", "xbt"]):
@@ -427,11 +431,14 @@ def main():
             printDashWallet()
         if set(Args.blockchain) & set(["all","Litecoin", "ltc"]):
             printLiteCoinWallet()
+
     if set(Args.output) & set(["json","j"]):
         print (json.dumps(JOut,indent=4))
+
     if set(Args.output) & set(["pdf","p"]):
         for coin in JOut['wallet'].keys():
-            pdfw.pdfPaperWallet(JOut, coin)
+            pdfw.pdfPaperWallet(JOut, coin, outDir, template)
+
     if set(Args.output) & set(["qrcode","qr", "q"]):
         pass
     
@@ -464,13 +471,30 @@ def parseArguments():
     ## Output and format
     parser.add_argument("-n", "--number", help="Optional, print BIP39 word list in numbered table", dest='wordlist', action='store_const', const=True, default=False)
     parser.add_argument("-o", "--output", help="Type of desired output(s), can be specify multiple(json, pdf or qrcodes)", type=str, dest="output", nargs='*', required=False, default="txt", choices=['text', 'txt', 't', 'json', 'j', 'pdf', 'p', 'qrcode', 'qr', 'q'])
-
-    ## Yet to be implemented
-    parser.add_argument("-d", "--directory", help="An optional where to save produced files (json, pdf or qrcodes)", type=str, required=False, default=".")
-    parser.add_argument("-T", "--template", help="Use alternative SVG template for paper wallet", dest="template", type=str, required=False)
+    parser.add_argument("-d", "--directory", help="An optional where to save produced files (json, pdf or qrcodes)", type=str, required=False, default=".", dest="outDir")
+    parser.add_argument("-T", "--template", help="Use alternative SVG template for paper wallet", dest="template", type=str, required=False, default="vanilla_template.svg")
     
     Args = parser.parse_args()
 
+    ## Additional arguments tests
+    if not os.path.isdir(Args.outDir):
+        print("Designated destination folder '%s' does not exist!" % Args.outDir)
+        exit()
+
+    if not os.path.isfile(Args.template):
+        print("Chosen template file '%s' does not exist!" % Args.template)
+        exit()
+    
+    if set(Args.output) & set(["pdf","p"]):
+        executables = ['/usr/bin/google-chrome','/usr/bin/brave-browser']
+        found = False
+        for ex in executables:
+            if os.path.isfile(ex) and os.access(ex, os.X_OK):
+                found = True
+                break
+        if not found:
+            print("PDF paper wallet output requires Google Chrome or Brave Browser but you have none!")
+            exit()
 
 ####################################################################################################
 ###

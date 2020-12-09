@@ -6,7 +6,7 @@ Vanilla Wallet is a cold storage wallet generator for multiple crypto currencies
 The private key is then converted to BIP39 recovery word list
 The results can be used to generate paper wallets or other cold storage
 
-## Supported coins
+## Supported coin families
  - Bitcoin (legacy, segwith, bech32)
  - Dash
  - Litecoin 
@@ -21,7 +21,7 @@ Using the command line options below you can choose to:
   * to provide a string for entropy or
   * to use the microphone/sound card to gather noise
   * to restore a previously generate vanilla address
-  * to have the output human-readable form or json
+  * to have the output human-readable form and/or json and/or pdf paper wallet
   * the language used for BIP39 (check you have the right locales installed)
   * have the results for one specific blockchain or all those supported
 
@@ -33,35 +33,28 @@ Ensure you have python3 installed, then install the dependecies with:
 ## Usage
 ```
 > ./vanilla.py -h
-usage: Vanilla Wallet command line arguments 
-      [-h] [-bc {all,Bitcoin,btc,xbt,Litecoin,ltc,Ethereum,eth,EthereumClassic,etc,Quadrans,qdc,Dash,dash}]
-      [-wn] [-e ENTROPY]
-      [-l {english,chinese_simplified,chinese_traditional,french,italian,japanese,korean,spanish}]
-      [-t] [-r RESTORE] [-p PASSWORD]
-      [-j] [-d DIRECTORY] [-q]
+usage: Vanilla Wallet command line arguments [-h]
+      [-bc [{all,Bitcoin,btc,xbt,Litecoin,ltc,Ethereum,eth,EthereumClassic,etc,Quadrans,qdc,Dash,dash} [{all,Bitcoin,btc,xbt,Litecoin,ltc,Ethereum,eth,EthereumClassic,etc,Quadrans,qdc,Dash,dash} ...]]]
+      [-e ENTROPY] [-l {english,chinese_simplified,chinese_traditional,french,italian,japanese,korean,spanish}] [-t] [-r RESTORE] [-p PASSWORD] [-n]
+      [-o [{text,txt,t,json,j,pdf,p,qrcode,qr,q} [{text,txt,t,json,j,pdf,p,qrcode,qr,q} ...]]]
 
 optional arguments:
   -h, --help            show this help message and exit
-  -bc {all,Bitcoin,btc,xbt,Litecoin,ltc,Ethereum,eth,EthereumClassic,etc,Quadrans,qdc,Dash,dash}, --blockchain {all,Bitcoin,btc,xbt,Litecoin,ltc,Ethereum,eth,EthereumClassic,etc,Quadrans,qdc,Dash,dash}
-                        Optional, the blockchain the wallet is generater for.
-                        Default: all
-  -wn, --wordnumber     Optional, print BIP39 word list in numbered table
+  -bc [{all,Bitcoin,btc,xbt,Litecoin,ltc,Ethereum,eth,EthereumClassic,etc,Quadrans,qdc,Dash,dash} [{all,Bitcoin,btc,xbt,Litecoin,ltc,Ethereum,eth,EthereumClassic,etc,Quadrans,qdc,Dash,dash} ...]], --blockchain [{all,Bitcoin,btc,xbt,Litecoin,ltc,Ethereum,eth,EthereumClassic,etc,Quadrans,qdc,Dash,dash} [{all,Bitcoin,btc,xbt,Litecoin,ltc,Ethereum,eth,EthereumClassic,etc,Quadrans,qdc,Dash,dash} ...]]
+                        Optional, the blockchain(s) the wallet is generater for. Default: all
   -e ENTROPY, --entropy ENTROPY
-                        An optional random string in case you prefer providing
-                        your own entropy
+                        An optional random string in case you prefer providing your own entropy
   -l {english,chinese_simplified,chinese_traditional,french,italian,japanese,korean,spanish}, --language {english,chinese_simplified,chinese_traditional,french,italian,japanese,korean,spanish}
-                        Optional, the language for the mnemonic words list
-                        (BIP39). Default: english
+                        Optional, the language for the mnemonic words list (BIP39). Default: english
   -t, --testnet         Generate addresses for test net (default is main net)
   -r RESTORE, --restore RESTORE
                         Restore a wallet from BIP39 word list
   -p PASSWORD, --password PASSWORD
                         Password for wallet encryption
-  -j, --json            Produce only json output
-  -d DIRECTORY, --directory DIRECTORY
-                        An optional where to save produced files (json and qr
-                        codes)
-  -q, --qrcode          Generate qrcodes for addresses and keys
+  -n, --number          Optional, print BIP39 word list in numbered table
+  -o [{text,txt,t,json,j,pdf,p,qrcode,qr,q} [{text,txt,t,json,j,pdf,p,qrcode,qr,q} ...]], --output [{text,txt,t,json,j,pdf,p,qrcode,qr,q} [{text,txt,t,json,j,pdf,p,qrcode,qr,q} ...]]
+                        Type of desired output(s), can be specify multiple(json, pdf or qrcodes)
+
   ```
 
  ## Disclaimer
@@ -71,3 +64,4 @@ Use it at your own risk. Developers, authors  and mantainers cannot be held resp
 ## Contributors and Credits
 - Massimo S. Musumeci massmux https://github.com/massmux/bip39gen
 - MaxP
+- Franco

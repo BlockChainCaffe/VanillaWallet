@@ -6,19 +6,51 @@
 import io
 import segno
 import base64
-from svglib.svglib import svg2rlg
-from reportlab.graphics import renderPDF
-import sys, os, subprocess
 
+# import PyPDF2
+
+# from svglib.svglib import svg2rlg
+# from reportlab.graphics import renderPDF
+import sys, os, subprocess
 import svglogos
 
 def svg2pdf(infile, outfile):
-    ### SVG to PDF with Chrome
-    bashCommand = "brave-browser --headless --disable-gpu --landscape=1 --print-to-pdf="+outfile+" "+infile
-    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
+    ### SVG to PDF with Brave (or Chrome)
+    # 
+    # I know there are modules to do this in pure python
+    # They just suck at handling complex svg with transparencies, overlapping etc
+    # I found that Brave (or Chrome) headless browser does a far better job even
+    # if it missess some features
+    #
+    # https://support.brave.com/hc/en-us/articles/360044860011-How-Do-I-Use-Command-Line-Flags-in-Brave-
+    # https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-printToPDF
+
+    ## Need one of those two executable. Pick one
+    if os.path.isfile('/usr/bin/google-chrome'):
+        bashCommand = "/usr/bin/google-chrome --headless --disable-gpu --print-to-pdf="+outfile+" --landscape=1 "+infile
+    else:
+        bashCommand = "/usr/bin/brave-browser --headless --disable-gpu --print-to-pdf="+outfile+" "+infile
+
+    # Open a "silenced" (stdout & stderr >> /dev/null) subprocess
+    process = subprocess.Popen(bashCommand.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     output = process.wait()
     if (output != 0 ): 
         return False
+
+# def rotatePDF(input, output):
+#     pdfIn = open(input, 'rb')
+#     pdfReader = PyPDF2.PdfFileReader(pdfIn)
+#     pdfWriter = PyPDF2.PdfFileWriter()
+
+#     for pageNum in range(pdfReader.numPages):
+#         page = pdfReader.getPage(pageNum)
+#         page.rotateClockwise(90)
+#         pdfWriter.addPage(page)
+
+#     pdfOut = open(output, 'wb')
+#     pdfWriter.write(pdfOut)
+#     pdfOut.close()
+#     pdfIn.close()
 
 def qr64(info):
     buff = io.BytesIO()
@@ -35,11 +67,11 @@ def qr64(info):
 ## PDF PAPER TEMPLATE FILLING
 ##
 
-def pdfPaperWallet(JOut, coin):
+def pdfPaperWallet(JOut, coin, outDir, template):
 
     ## Open Template
     wt=''
-    with open('gfx/T5.svg','r') as file:
+    with open(template,'r') as file:
         wt = file.read()
 
     ## Replace the coin name and logo (those can't be missing!!)
@@ -65,10 +97,7 @@ def pdfPaperWallet(JOut, coin):
     private_qr = qr64(privateKey)
     wt=wt.replace('__private-qr__', 'data:image/png;base64,'+private_qr)
 
-
-
     ## Replace basic values (those can't be missing!!)
-    
     private_qr = qr64(privateKey)
     wt=wt.replace('__legacy__', address)\
         .replace('__private__',privateKey)        
@@ -113,14 +142,14 @@ def pdfPaperWallet(JOut, coin):
         wt = wt.replace('__wif__','')\
             .replace('WIF :','')
 
-
-
-
-
-    ## Rotate SVG
-
     ## Save SVG
-    with open(address+".svg", "w") as f :
+    with open(outDir+'/'+address+".svg", "w") as f :
         f.write(wt)
     
-    ## svg to PDF ??
+    ## svg to PDF
+    svg2pdf(outDir+'/'+address+".svg", outDir+'/'+address+"-r.pdf")
+    os.remove(outDir+'/'+address+".svg")
+
+    ## Rotate PDF
+    # rotatePDF(outDir+'/'+address+"-r.pdf", outDir+'/'+address+".pdf")
+    # os.remove(outDir+'/'+address+"-r.pdf")
