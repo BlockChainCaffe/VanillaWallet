@@ -9,8 +9,6 @@ import base64
 
 # import PyPDF2
 
-# from svglib.svglib import svg2rlg
-# from reportlab.graphics import renderPDF
 import sys, os, subprocess
 import svglogos
 
@@ -94,11 +92,21 @@ def pdfPaperWallet(JOut, coin, outDir, template):
     else:
         privateKey=JOut['keys']['privateKey']
         wt=wt.replace('__private__',privateKey)
-    private_qr = qr64(privateKey)
-    wt=wt.replace('__private-qr__', 'data:image/png;base64,'+private_qr)
+    
+
+    ## Do we have WIF?
+    if 'WIF' in JOut['wallet'][coin].keys():
+        wif=JOut['wallet'][coin]['WIF']
+        wt = wt.replace('__wif__', wif)
+        wif_qr = qr64(wif)
+        wt=wt.replace('__private-qr__', 'data:image/png;base64,'+wif_qr)
+    else:
+        private_qr = qr64(privateKey)
+        wt=wt.replace('__private-qr__', 'data:image/png;base64,'+private_qr)
+        wt = wt.replace('__wif__','').replace('WIF :','')
+
 
     ## Replace basic values (those can't be missing!!)
-    private_qr = qr64(privateKey)
     wt=wt.replace('__legacy__', address)\
         .replace('__private__',privateKey)        
     
@@ -134,20 +142,12 @@ def pdfPaperWallet(JOut, coin, outDir, template):
         wt = wt.replace('Bech 32: __bech32__','')\
             .replace('Bech32','')
 
-    ## Do we have WIF?
-    if 'WIF' in JOut['wallet'][coin].keys():
-        wif=JOut['wallet'][coin]['WIF']
-        wt = wt.replace('__wif__', wif)
-    else:
-        wt = wt.replace('__wif__','')\
-            .replace('WIF :','')
-
     ## Save SVG
     with open(outDir+'/'+address+".svg", "w") as f :
         f.write(wt)
-    
+
     ## svg to PDF
-    svg2pdf(outDir+'/'+address+".svg", outDir+'/'+address+"-r.pdf")
+    svg2pdf(outDir+'/'+address+".svg", outDir+'/'+address+".pdf")
     os.remove(outDir+'/'+address+".svg")
 
     ## Rotate PDF
