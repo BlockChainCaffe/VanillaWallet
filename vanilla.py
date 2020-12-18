@@ -437,7 +437,7 @@ def main():
 
     if set(Args.output) & set(["pdf","p"]):
         for coin in JOut['wallet'].keys():
-            pdfw.pdfPaperWallet(JOut, coin, outDir, template)
+            pdfw.pdfPaperWallet(JOut, coin, outDir, template, Args.format)
 
     if set(Args.output) & set(["qrcode","qr", "q"]):
         pass
@@ -473,7 +473,8 @@ def parseArguments():
     parser.add_argument("-o", "--output", help="Type of desired output(s), can be specify multiple(json, pdf or qrcodes)", type=str, dest="output", nargs='*', required=False, default="txt", choices=['text', 'txt', 't', 'json', 'j', 'pdf', 'p', 'qrcode', 'qr', 'q'])
     parser.add_argument("-d", "--directory", help="An optional where to save produced files (json, pdf or qrcodes)", type=str, required=False, default=".", dest="outDir")
     parser.add_argument("-T", "--template", help="Use alternative SVG template for paper wallet", dest="template", type=str, required=False, default="vanilla_template.svg")
-    
+    parser.add_argument("-f", "--format", help="Use A4 or Letter template for paper wallet", dest="format", type=str, required=False, default="a4", choices=['a4', 'letter'])
+
     Args = parser.parse_args()
 
     ## Additional arguments tests
@@ -486,7 +487,7 @@ def parseArguments():
         exit()
     
     if set(Args.output) & set(["pdf","p"]):
-        executables = ['/usr/bin/google-chrome','/usr/bin/brave-browser']
+        executables = ['/usr/bin/google-chrome','/usr/bin/chromium','/usr/bin/brave-browser']
         found = False
         for ex in executables:
             if os.path.isfile(ex) and os.access(ex, os.X_OK):

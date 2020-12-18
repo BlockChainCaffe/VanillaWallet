@@ -12,11 +12,31 @@ import base64
 import sys, os, subprocess
 import svglogos
 
-def svg2pdf(infile, outfile):
-    ### SVG to PDF with Brave (or Chrome)
+def svg2html(infile, outfile, format):
+    ## Open Template
+    ht=''
+    format_file=''
+    if format=='letter':
+        format_file='letter_landscape.html'
+    else:
+        format_file='a4_landscape.html'
+
+    with open(format_file,'r') as file:
+        ht = file.read()
+
+    ## Replace the coin name and logo (those can't be missing!!)
+    ht=ht.replace('__SVG__',infile)
+
+    ## Save SVG
+    with open(outfile, "w") as f :
+        f.write(ht)
+
+
+def html2pdf(infile, outfile):
+    ### HTML to PDF with Brave (or Chrome)
     # 
     # I know there are modules to do this in pure python
-    # They just suck at handling complex svg with transparencies, overlapping etc
+    # They just suck at handling complex html with transparencies, overlapping etc
     # I found that Brave (or Chrome) headless browser does a far better job even
     # if it missess some features
     #
@@ -25,7 +45,9 @@ def svg2pdf(infile, outfile):
 
     ## Need one of those two executable. Pick one
     if os.path.isfile('/usr/bin/google-chrome'):
-        bashCommand = "/usr/bin/google-chrome --headless --disable-gpu --print-to-pdf="+outfile+" --landscape=1 "+infile
+        bashCommand = "/usr/bin/google-chrome --headless --disable-gpu --print-to-pdf="+outfile+" "+infile
+    elif os.path.isfile('/usr/bin/chromium'):
+        bashCommand = "/usr/bin/chromium --headless --disable-gpu --print-to-pdf="+outfile+" "+infile
     else:
         bashCommand = "/usr/bin/brave-browser --headless --disable-gpu --print-to-pdf="+outfile+" "+infile
 
@@ -65,7 +87,7 @@ def qr64(info):
 ## PDF PAPER TEMPLATE FILLING
 ##
 
-def pdfPaperWallet(JOut, coin, outDir, template):
+def pdfPaperWallet(JOut, coin, outDir, template, format):
 
     ## Open Template
     wt=''
@@ -146,10 +168,11 @@ def pdfPaperWallet(JOut, coin, outDir, template):
     with open(outDir+'/'+address+".svg", "w") as f :
         f.write(wt)
 
-    ## svg to PDF
-    svg2pdf(outDir+'/'+address+".svg", outDir+'/'+address+".pdf")
+    ## svg to html
+    svg2html(outDir+'/'+address+".svg", outDir+'/'+address+".html", format)
+    ## html to PDF
+    html2pdf(outDir+'/'+address+".html", outDir+'/'+address+".pdf")
+    ## clean
     os.remove(outDir+'/'+address+".svg")
+    os.remove(outDir+'/'+address+".html")
 
-    ## Rotate PDF
-    # rotatePDF(outDir+'/'+address+"-r.pdf", outDir+'/'+address+".pdf")
-    # os.remove(outDir+'/'+address+"-r.pdf")
