@@ -45,11 +45,11 @@ def html2pdf(infile, outfile):
 
     ## Need one of those two executable. Pick one
     if os.path.isfile('/usr/bin/google-chrome'):
-        bashCommand = "/usr/bin/google-chrome --headless --disable-gpu --print-to-pdf="+outfile+" "+infile
+        bashCommand = "/usr/bin/google-chrome --headless --no-sandbox --disable-gpu --print-to-pdf="+outfile+" "+infile
     elif os.path.isfile('/usr/bin/chromium'):
-        bashCommand = "/usr/bin/chromium --headless --disable-gpu --print-to-pdf="+outfile+" "+infile
+        bashCommand = "/usr/bin/chromium --headless --no-sandbox --disable-gpu --print-to-pdf="+outfile+" "+infile
     else:
-        bashCommand = "/usr/bin/brave-browser --headless --disable-gpu --print-to-pdf="+outfile+" "+infile
+        bashCommand = "/usr/bin/brave-browser --headless --no-sandbox --disable-gpu --print-to-pdf="+outfile+" "+infile
 
     # Open a "silenced" (stdout & stderr >> /dev/null) subprocess
     process = subprocess.Popen(bashCommand.split(), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

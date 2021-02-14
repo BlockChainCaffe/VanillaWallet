@@ -6,5 +6,5 @@ sudo apt-get install python3-pyaudio
 sudo apt-get install python3-pyaudio
 sudo apt-get install chromium-browser
 
-pip3 install -r requirements.txt
+sudo pip3 install -r requirements.txt
 
