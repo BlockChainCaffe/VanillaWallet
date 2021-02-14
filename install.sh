@@ -1,3 +1,4 @@
+#!/bin/bash
 sudo apt-get udate
 sudo apt-get upgrade
 sudo apt-get install git
