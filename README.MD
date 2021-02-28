@@ -26,6 +26,9 @@ In order to get the PDF, the conversion from SVG to PDF is done using Google Chr
 at the time for colors and transparency. 
 
 ## How to use it
+
+[![IMAGE ALT TEXT](http://img.youtube.com/vi/AjrZ0ga8VjA/0.jpg)](http://www.youtube.com/watch?v=AjrZ0ga8VjA "Video Title")
+
 The sujested procedure is:
   * download a linux distro and make a live USB key
   * boot your PC from the live USB key
